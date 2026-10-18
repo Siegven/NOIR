@@ -560,7 +560,7 @@ def scan_and_repair_entire_repository(payload: ScanRepoRequest):
                 if iss.get("file") == rel_path
             ]
 
-            should_repair = bool(file_issues) or (len(repaired_files) < 6 and len(original_content.splitlines()) >= 20)
+            should_repair = bool(file_issues and len(repaired_files) < 3) or (len(repaired_files) < 2 and len(original_content.splitlines()) >= 20)
 
             if should_repair:
                 res = noir_analyze_code(rel_path, original_content, cross_repo_context)
@@ -578,6 +578,8 @@ def scan_and_repair_entire_repository(payload: ScanRepoRequest):
                         target_file.write_text(res["fixed"], encoding="utf-8")
                     except Exception:
                         pass
+                    if len(repaired_files) >= 3:
+                        break
                 else:
                     clean_files.append({
                         "file_path": rel_path,
