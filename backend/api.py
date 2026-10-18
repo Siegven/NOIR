@@ -37,6 +37,7 @@ app.add_middleware(
 GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "")
 GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 def get_github_client(token: Optional[str] = None, require_auth: bool = False) -> Github:
     gh_token = token or os.getenv("GITHUB_TOKEN")
@@ -105,7 +106,7 @@ def github_login():
             status_code=500, 
             detail="GITHUB_CLIENT_ID is not set in backend/.env. Please configure your GitHub OAuth App."
         )
-    redirect_uri = "http://localhost:8000/api/auth/github/callback"
+    redirect_uri = f"{BACKEND_URL}/api/auth/github/callback"
     auth_url = f"https://github.com/login/oauth/authorize?client_id={GITHUB_CLIENT_ID}&redirect_uri={redirect_uri}&scope=repo,user"
     return {"url": auth_url}
 
