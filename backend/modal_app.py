@@ -36,15 +36,14 @@ noir_image = (
 
 app = modal.App(name="noir-engine")
 
-# Load environment secrets (.env file)
-env_path = BACKEND_DIR / ".env"
-secrets = [modal.Secret.from_dotenv(str(env_path))] if env_path.exists() else []
+# Named Modal secret created from backend/.env
+noir_secret = modal.Secret.from_name("noir-secrets")
 
 @app.function(
     image=noir_image,
     gpu="L4",  # Fast Nvidia L4 GPU (~$0.80/hr, automatically scales to 0 when idle)
     volumes={"/root/.ollama": volume},
-    secrets=secrets,
+    secrets=[noir_secret],
     scaledown_window=300,  # Keeps warm for 5 minutes after a request, then shuts down to $0
     timeout=600,
 )
