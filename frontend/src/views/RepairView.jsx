@@ -20,6 +20,7 @@ import {
   RefreshCw,
   Sliders
 } from 'lucide-react';
+import { API_BASE } from '../apiConfig';
 
 export default function RepairView({ selectedRepo, userToken, onUpdateQualityScore, onNavigateToRepos, onNavigateToAnalysis }) {
   const [viewMode, setViewMode] = useState('side-by-side');
@@ -56,7 +57,7 @@ export default function RepairView({ selectedRepo, userToken, onUpdateQualitySco
     setPrError(null);
 
     try {
-      const res = await fetch("/api/scan-and-repair-all", {
+      const res = await fetch(`${API_BASE}/api/scan-and-repair-all`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -100,7 +101,7 @@ export default function RepairView({ selectedRepo, userToken, onUpdateQualitySco
         content: f.repaired_code
       }));
 
-      const res = await fetch("/api/create-multi-file-pr", {
+      const res = await fetch(`${API_BASE}/api/create-multi-file-pr`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

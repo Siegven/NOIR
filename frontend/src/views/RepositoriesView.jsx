@@ -10,6 +10,7 @@ import {
   Lock,
   ExternalLink
 } from 'lucide-react';
+import { API_BASE } from '../apiConfig';
 
 export default function RepositoriesView({ userToken, repoQualityMap = {}, onSelectRepoForScan }) {
   const [repos, setRepos] = useState([]);
@@ -25,7 +26,7 @@ export default function RepositoriesView({ userToken, repoQualityMap = {}, onSel
     setIsLoading(true);
     setError(null);
     try {
-      const url = `/api/repos?token=${encodeURIComponent(userToken)}`;
+      const url = `${API_BASE}/api/repos?token=${encodeURIComponent(userToken)}`;
       const res = await fetch(url);
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));

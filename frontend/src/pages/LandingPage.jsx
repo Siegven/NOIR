@@ -11,6 +11,7 @@ import {
   Lock,
   Loader2
 } from 'lucide-react';
+import { API_BASE } from '../apiConfig';
 
 const GitHubIcon = ({ className = "w-4 h-4" }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -26,7 +27,7 @@ export default function LandingPage({ onEnterApp, userToken, setUserToken, onLog
   const handleGitHubOAuth = async () => {
     setIsLoggingIn(true);
     try {
-      const res = await fetch("/api/auth/github/login");
+      const res = await fetch(`${API_BASE}/api/auth/github/login`);
       if (res.ok) {
         const data = await res.json();
         if (data.url) {

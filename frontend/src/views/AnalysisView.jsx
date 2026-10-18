@@ -13,6 +13,7 @@ import {
   Activity
 } from 'lucide-react';
 import QualityScorecard from '../components/QualityScorecard';
+import { API_BASE } from '../apiConfig';
 
 export default function AnalysisView({ selectedRepo, userToken, initialQualityReport, onUpdateQualityScore, onNavigateToRepair, onNavigateToRepos }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -33,7 +34,7 @@ export default function AnalysisView({ selectedRepo, userToken, initialQualityRe
     if (!selectedRepo) return;
     setIsLoadingQuality(true);
     try {
-      const url = `/api/repo-quality?repo_full_name=${encodeURIComponent(selectedRepo)}${userToken ? `&token=${encodeURIComponent(userToken)}` : ''}&_t=${Date.now()}`;
+      const url = `${API_BASE}/api/repo-quality?repo_full_name=${encodeURIComponent(selectedRepo)}${userToken ? `&token=${encodeURIComponent(userToken)}` : ''}&_t=${Date.now()}`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -54,7 +55,7 @@ export default function AnalysisView({ selectedRepo, userToken, initialQualityRe
     setError(null);
     setAnalysisResult(null); // Never show old results
     try {
-      const res = await fetch("/api/analyze", {
+      const res = await fetch(`${API_BASE}/api/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

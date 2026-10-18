@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Settings, Key, Cpu, CheckCircle2, ExternalLink, ShieldCheck, RefreshCw } from 'lucide-react';
+import { API_BASE } from '../apiConfig';
 
 export default function SettingsView({ userToken, setUserToken }) {
   const [token, setToken] = useState(userToken || "");
@@ -18,7 +19,7 @@ export default function SettingsView({ userToken, setUserToken }) {
   const checkHealth = async () => {
     setIsChecking(true);
     try {
-      const res = await fetch("/api/health");
+      const res = await fetch(`${API_BASE}/api/health`);
       if (res.ok) {
         const data = await res.json();
         setHealthStatus(data);

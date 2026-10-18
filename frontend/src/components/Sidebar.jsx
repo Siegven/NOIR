@@ -11,6 +11,7 @@ import {
   Terminal,
   ExternalLink
 } from 'lucide-react';
+import { API_BASE } from '../apiConfig';
 
 export default function Sidebar({ activeTab, setActiveTab, onBackToHome, onLogout, userToken }) {
   const [userProfile, setUserProfile] = useState(() => {
@@ -32,7 +33,7 @@ export default function Sidebar({ activeTab, setActiveTab, onBackToHome, onLogou
     const fetchUserProfile = async () => {
       // 1. Try local backend endpoint first
       try {
-        const res = await fetch(`/api/user?token=${encodeURIComponent(userToken)}`);
+        const res = await fetch(`${API_BASE}/api/user?token=${encodeURIComponent(userToken)}`);
         if (res.ok) {
           const data = await res.json();
           if (isMounted && data?.login) {

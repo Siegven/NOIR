@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
+import { API_BASE } from '../apiConfig';
 
 export default function PullRequestsView({ selectedRepo, userToken, onNavigateToRepos }) {
   const [pullRequests, setPullRequests] = useState([]);
@@ -22,7 +23,7 @@ export default function PullRequestsView({ selectedRepo, userToken, onNavigateTo
     setIsLoading(true);
     setError(null);
     try {
-      const url = `/api/pull-requests?repo_full_name=${encodeURIComponent(selectedRepo)}${userToken ? `&token=${encodeURIComponent(userToken)}` : ''}`;
+      const url = `${API_BASE}/api/pull-requests?repo_full_name=${encodeURIComponent(selectedRepo)}${userToken ? `&token=${encodeURIComponent(userToken)}` : ''}`;
       const res = await fetch(url);
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
