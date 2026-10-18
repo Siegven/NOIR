@@ -1,0 +1,46 @@
+# Environment & Secrets (NEVER push credentials to git)
+.env
+*.env
+!.env.example
+
+# Model weights & large archives (Exceeds GitHub 100MB limit)
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.bin
+*.pt
+*.safetensors
+*.gguf
+
+# Local vector store & dynamic datasets
+.noir/
+dataset/
+
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Node / Frontend dependencies & build output
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+*.log
+
+# OS & IDE metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
