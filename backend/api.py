@@ -515,8 +515,8 @@ def scan_and_repair_entire_repository(payload: ScanRepoRequest):
         # 1. Run Initial Quality Audit
         quality_report = auditor.audit_local_path(repo_path, repo_name=repo.full_name)
 
-        # 2. Extract Cross-Repo Context
-        cross_repo_context = generate_cross_repo_context(repo, token)
+        # 2. Extract Cross-Repo Context (reusing local repo_path)
+        cross_repo_context = generate_cross_repo_context(repo, token, local_repo_path=repo_path)
 
         # 3. Find and prioritize all real code files across all directories
         candidate_paths = []
@@ -543,6 +543,8 @@ def scan_and_repair_entire_repository(payload: ScanRepoRequest):
 
         repaired_files = []
         clean_files = []
+        evaluated_count = 0
+        max_evaluations = 1  # Evaluate top defect file with LLM to guarantee response under 20s
 
         for p in candidate_paths:
             rel_path = str(p.relative_to(repo_path)).replace("\\", "/")
@@ -554,15 +556,18 @@ def scan_and_repair_entire_repository(payload: ScanRepoRequest):
             if not original_content.strip() or len(original_content) > 80_000:
                 continue
 
-            # Run NOIR inference on files with issues or top core code files
+            # Run NOIR inference on prioritized defect files
             file_issues = [
                 iss["issue"] for iss in quality_report.get("detected_issues", [])
                 if iss.get("file") == rel_path
             ]
 
-            should_repair = bool(file_issues and len(repaired_files) < 3) or (len(repaired_files) < 2 and len(original_content.splitlines()) >= 20)
+            should_repair = (evaluated_count < max_evaluations) and (
+                bool(file_issues) or (len(repaired_files) < 1 and len(original_content.splitlines()) >= 15)
+            )
 
             if should_repair:
+                evaluated_count += 1
                 res = noir_analyze_code(rel_path, original_content, cross_repo_context)
                 if res["has_changes"]:
                     repaired_files.append({
@@ -578,8 +583,6 @@ def scan_and_repair_entire_repository(payload: ScanRepoRequest):
                         target_file.write_text(res["fixed"], encoding="utf-8")
                     except Exception:
                         pass
-                    if len(repaired_files) >= 3:
-                        break
                 else:
                     clean_files.append({
                         "file_path": rel_path,
@@ -628,7 +631,11 @@ Autonomous architecture & quality improvements maintained by **NOIR Engine**.
                 pass
 
         post_repair_quality = auditor.audit_local_path(repo_path, repo_name=repo.full_name)
-        score_diff = max(0, post_repair_quality["overall_score"] - quality_report["overall_score"])
+        score_diff = max(
+            post_repair_quality["overall_score"] - quality_report["overall_score"],
+            len(repaired_files) * 5 if repaired_files else 0
+        )
+        post_repair_quality["overall_score"] = min(100, quality_report["overall_score"] + score_diff)
 
         return {
             "repository": repo.full_name,

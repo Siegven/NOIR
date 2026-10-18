@@ -46,6 +46,7 @@ noir_secret = modal.Secret.from_name("noir-secrets")
     secrets=[noir_secret],
     scaledown_window=300,  # Keeps warm for 5 minutes after a request, then shuts down to $0
     timeout=600,
+    max_containers=1,
 )
 @modal.asgi_app()
 def fastapi_app():

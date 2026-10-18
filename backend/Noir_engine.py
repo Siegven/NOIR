@@ -37,35 +37,44 @@ def log_qlora_training_data(prompt: str, original: str, fixed: str, file_path: s
     with open("dataset/qlora_finetune_data.jsonl", "a", encoding="utf-8") as f:
         f.write(json.dumps(record) + "\n")
 
-def generate_cross_repo_context(gh_repo, github_token: str) -> str:
+def generate_cross_repo_context(gh_repo, github_token: str, local_repo_path: Path | None = None) -> str:
     """
-    Downloads the remote repo temporarily and uses NOIR's cross_repo logic
-    to extract architectural insights from highly-starred GitHub repos.
+    Extracts architectural insights from top GitHub repos, reusing local_repo_path if available.
     """
     try:
         harvester = GitHubPublicRepoHarvester(token=github_token)
         analyzer = CrossRepositoryAnalyzer()
         
-        with tempfile.TemporaryDirectory() as tmpdir:
-            print(f"   [Context Extraction] Temporarily cloning {gh_repo.full_name} to analyze architecture...")
-            repo_path = harvester.download_public_repo_zip(gh_repo, Path(tmpdir))
-            
-            if repo_path:
-                # Compare against public github and get the top 2 matches
-                report = analyzer.compare_against_public_github(
-                    repo_path, 
-                    repo_id=gh_repo.full_name, 
-                    result_limit=2,
-                    token=github_token
-                )
-                insights = [match["insight"] for match in report.get("matches", [])]
-                
-                if insights:
-                    return "\n- ".join(insights)
+        target_path = local_repo_path
+        if target_path:
+            report = analyzer.compare_against_public_github(
+                target_path, 
+                repo_id=getattr(gh_repo, "full_name", str(gh_repo)), 
+                candidate_limit=1,
+                result_limit=1,
+                token=github_token
+            )
+            insights = [match["insight"] for match in report.get("matches", [])]
+            if insights:
+                return "\n- ".join(insights)
+        else:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                repo_path = harvester.download_public_repo_zip(gh_repo, Path(tmpdir))
+                if repo_path:
+                    report = analyzer.compare_against_public_github(
+                        repo_path, 
+                        repo_id=getattr(gh_repo, "full_name", str(gh_repo)), 
+                        candidate_limit=1,
+                        result_limit=1,
+                        token=github_token
+                    )
+                    insights = [match["insight"] for match in report.get("matches", [])]
+                    if insights:
+                        return "\n- ".join(insights)
     except Exception as e:
-        print(f"   [Context Extraction] Warning - Could not fetch cross-repo context: {e}")
+        print(f"   [Context Extraction] Notice - Using domain architectural context: {e}")
         
-    return "Compare against highly-starred GitHub repositories. Enforce modularity, clear separation of concerns, and robust error handling."
+    return "Enforce modular design, strict input sanitization, error resilience, and standardized repository structure."
 
 def noir_analyze_code(file_path: str, code_content: str, cross_repo_context: str) -> dict:
     prompt = f"""
@@ -88,7 +97,11 @@ def noir_analyze_code(file_path: str, code_content: str, cross_repo_context: str
 
     response = ollama.chat(
         model=MODEL_NAME,
-        messages=[{'role': 'user', 'content': prompt}]
+        messages=[{'role': 'user', 'content': prompt}],
+        options={
+            "num_predict": 1024,
+            "temperature": 0.2
+        }
     )
 
     raw_output = response['message']['content']

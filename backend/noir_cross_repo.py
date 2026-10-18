@@ -120,23 +120,8 @@ class GitHubPublicRepoHarvester:
 
     def download_public_repo_zip(self, repo, destination: Path) -> Path | None:
         try:
-            # 1. Fetch exact latest commit SHA on the default branch to bypass GitHub CDN caching
-            commit_sha = None
-            try:
-                default_branch = getattr(repo, "default_branch", "main") or "main"
-                try:
-                    commit_sha = repo.get_commits()[0].sha
-                except Exception:
-                    branch_obj = repo.get_branch(default_branch)
-                    commit_sha = branch_obj.commit.sha
-            except Exception:
-                pass
-
-            if commit_sha:
-                url = f"https://api.github.com/repos/{repo.full_name}/zipball/{commit_sha}"
-            else:
-                ref = getattr(repo, "default_branch", "main") or "main"
-                url = f"https://api.github.com/repos/{repo.full_name}/zipball/{ref}"
+            ref = getattr(repo, "default_branch", "main") or "main"
+            url = f"https://api.github.com/repos/{repo.full_name}/zipball/{ref}"
 
             headers = {
                 "Accept": "application/vnd.github+json",
@@ -146,7 +131,7 @@ class GitHubPublicRepoHarvester:
             if self.token:
                 headers["Authorization"] = f"Bearer {self.token}"
 
-            response = requests.get(url, headers=headers, timeout=45, allow_redirects=True)
+            response = requests.get(url, headers=headers, timeout=6, allow_redirects=True)
             if response.status_code >= 400:
                 return None
 
@@ -199,8 +184,8 @@ class CrossRepositoryAnalyzer:
         self,
         path: str | Path,
         repo_id: str | None = None,
-        candidate_limit: int = 6,
-        result_limit: int = 5,
+        candidate_limit: int = 1,
+        result_limit: int = 1,
         token: str | None = None,
     ) -> dict:
         # Always clear vector store for a completely fresh domain analysis run
